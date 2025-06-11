@@ -440,3 +440,144 @@ namespace TiendaDeBarrio
         // =================================================================
         // MÓDULO DE GESTIÓN DE VENTAS
         // =================================================================
+        static void MenuGestionVentas()
+            {
+                bool volver = false;
+                while (!volver)
+                {
+                    Console.Clear();
+                    Console.WriteLine("===================================");
+                    Console.WriteLine("         MENÚ GESTIÓN VENTAS       ");
+                    Console.WriteLine("===================================");
+                    Console.WriteLine("1. Generar factura");
+                    Console.WriteLine("2. Salir de Gestión Ventas (Menú Principal)");
+                    Console.Write("\nSeleccione una opción: ");
+                    string opcion = Console.ReadLine();
+
+                    switch (opcion)
+                    {
+                        case "1":
+                            GenerarFactura();
+                            break;
+                        case "2":
+                            volver = true;
+                            break;
+                        default:
+                            Console.WriteLine("Opción no válida. Presione una tecla para continuar...");
+                            Console.ReadKey();
+                            break;
+                    }
+                }
+            }
+
+            static void GenerarFactura()
+            {
+                Console.Clear();
+                Console.WriteLine("===================================");
+                Console.WriteLine("         GENERAR FACTURA           ");
+                Console.WriteLine("===================================");
+
+                // Selección de usuario comprador
+                Console.Write("Ingrese la identificación del comprador: ");
+                string idComprador = Console.ReadLine();
+                int indiceUsuario = -1;
+                for (int i = 0; i < cantidadUsuarios; i++)
+                {
+                    if (usuarios[i, 0] == idComprador)
+                    {
+                        indiceUsuario = i;
+                        break;
+                    }
+                }
+
+                if (indiceUsuario == -1)
+                {
+                    Console.WriteLine("Usuario no encontrado. Presione una tecla para volver...");
+                    Console.ReadKey();
+                    return;
+                }
+
+                // Detalle de compra
+                int maxProductos = 10;
+                int[,] detalle = new int[maxProductos, 2]; // [0]=idArticulo, [1]=cantidad
+                int cantidadProductos = 0;
+
+                while (cantidadProductos < maxProductos)
+                {
+                    Console.Write("\nIngrese ID del artículo a comprar (0 para terminar): ");
+                    int idArticulo = int.Parse(Console.ReadLine());
+                    if (idArticulo == 0) break;
+
+                    int indiceArticulo = -1;
+                    for (int i = 0; i < cantidadArticulos; i++)
+                    {
+                        if ((int)articulos[i, 0] == idArticulo)
+                        {
+                            indiceArticulo = i;
+                            break;
+                        }
+                    }
+
+                    if (indiceArticulo == -1)
+                    {
+                        Console.WriteLine("Artículo no encontrado.");
+                        continue;
+                    }
+
+                    Console.Write("Cantidad a comprar: ");
+                    int cantidadDeseada = int.Parse(Console.ReadLine());
+
+                    int stockDisponible = (int)articulos[indiceArticulo, 3];
+                    if (cantidadDeseada > stockDisponible)
+                    {
+                        Console.WriteLine("Stock insuficiente. Disponible: " + stockDisponible);
+                        continue;
+                    }
+
+                    // Guardar en detalle
+                    detalle[cantidadProductos, 0] = idArticulo;
+                    detalle[cantidadProductos, 1] = cantidadDeseada;
+                    cantidadProductos++;
+
+                    // Descontar del stock
+                    articulos[indiceArticulo, 3] = stockDisponible - cantidadDeseada;
+
+                    Console.WriteLine("Artículo agregado.");
+                }
+
+                // Mostrar factura
+                Console.Clear();
+                Console.WriteLine("===================================");
+                Console.WriteLine("            FACTURA                ");
+                Console.WriteLine("===================================");
+
+                Console.WriteLine("Cliente: {0} - {1} {2}", usuarios[indiceUsuario, 0], usuarios[indiceUsuario, 1], usuarios[indiceUsuario, 2]);
+                Console.WriteLine("\n{0,-10} {1,-30} {2,-15} {3,-10} {4,-15}", "ID", "Nombre", "Valor Unitario", "Cantidad", "Subtotal");
+                Console.WriteLine(new string('-', 85));
+
+                double total = 0;
+                for (int i = 0; i < cantidadProductos; i++)
+                {
+                    int id = detalle[i, 0];
+                    int cantidad = detalle[i, 1];
+                    for (int j = 0; j < cantidadArticulos; j++)
+                    {
+                        if ((int)articulos[j, 0] == id)
+                        {
+                            string nombre = (string)articulos[j, 1];
+                            double valor = (double)articulos[j, 2];
+                            double subtotal = valor * cantidad;
+                            total += subtotal;
+                            Console.WriteLine("{0,-10} {1,-30} {2,-15:C} {3,-10} {4,-15:C}", id, nombre, valor, cantidad, subtotal);
+                            break;
+                        }
+                    }
+                }
+
+                Console.WriteLine("\nTOTAL A PAGAR: {0:C}", total);
+                Console.WriteLine("\nPresione una tecla para volver al menú de ventas...");
+                Console.ReadKey();
+            }
+        }
+    }
+}
